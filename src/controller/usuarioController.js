@@ -8,6 +8,12 @@ endpoints.post('/usuario', async (req, resp) => {
   try {
     let novoLogin = req.body;
     
+    if (!novoLogin.nome || !novoLogin.email || !novoLogin.senha) {
+      return resp.status(400).send({ 
+        erro: 'Campos obrigatórios: nome, email, senha' 
+      });
+    }
+
     let id = await repo.criarConta(novoLogin);
     
     resp.send({ novoId: id });

@@ -2,14 +2,15 @@ import { connection } from "./connection.js";
 
 export async function criarConta(novoLogin) {
   const comando = `
-    INSERT INTO usuario (nome, email, senha)
-               VALUES (?, ?, MD5(?));
+    INSERT INTO usuario (nome, email, senha, telefone)
+               VALUES (?, ?, MD5(?), ?);
   `;
 
   const [info] = await connection.query(comando, [
     novoLogin.nome,
     novoLogin.email,
-    novoLogin.senha
+    novoLogin.senha,
+    novoLogin.telefone || null
   ]);
   return info.insertId;
 }
