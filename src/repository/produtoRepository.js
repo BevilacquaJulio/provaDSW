@@ -2,15 +2,14 @@ import { connection } from './connection.js'
 
 export async function inserirProduto(produto) {
   const comando = `
-    INSERT INTO produto (usuario_id, nome, descricao, preco, imagem_url)
-    VALUES (?, ?, ?, ?, ?);
+    INSERT INTO produto (usuario_id, nome, descricao, preco)
+    VALUES (?, ?, ?, ?);
   `;
   const [info] = await connection.query(comando, [
     produto.usuario_id,
     produto.nome,
     produto.descricao,
     produto.preco,
-    produto.imagem_url
   ]);
   return info.insertId;
 }
@@ -110,6 +109,16 @@ export async function deletarProduto(produto_id) {
   `
   const [registro] = await connection.query(comando, [produto_id])
   return registro.affectedRows;
+}
+
+export async function atualizarImagemProduto(produto_id, imagem_url) {
+  const comando = `
+    UPDATE produto 
+    SET imagem_url = ?
+    WHERE produto_id = ?;
+  `
+  const [registros] = await connection.query(comando, [imagem_url, produto_id])
+  return registros.affectedRows;
 }
 
 export async function verificarProprietarioProduto(produto_id, usuario_id) {

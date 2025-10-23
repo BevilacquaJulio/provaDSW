@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 
-const KEY = process.env.JWT_SECRET || 'borapracima'
+const KEY = process.env.JWT_SECRET || 'chavesecreta123'
 
 export function generateToken(userInfo) {
   if (!userInfo.role)
