@@ -159,5 +159,48 @@ endpoints.delete('/deletar-produto/:id', autenticador, async (req, resp) => {
   }
 });
 
+endpoints.put('/definir-imagem/:id', autenticador, async (req, resp) => {
+  try {
+    let produto_id = Number(req.params.id);
+    let usuarioId = req.user.usuario_id;
+    let { imagem_url } = req.body;
+
+    if (!imagem_url) {
+      return resp.status(400).send({ 
+        erro: 'Campo obrigatório: imagem_url' 
+      });
+    }
+
+    // Verificar se o produto pertence ao usuário
+    const pertence = await repo.verificarProprietarioProduto(produto_id, usuarioId);
+    if (!pertence) {
+      return resp.status(403).send({ 
+        erro: 'Você não tem permissão para alterar este produto' 
+      });
+    }
+
+    // Atualizar a imagem no banco
+    const linhasAfetadas = await repo.atualizarImagemProduto(produto_id, imagem_url);
+
+    if (linhasAfetadas === 0) {
+      return resp.status(404).send({ 
+        erro: "Produto não encontrado" 
+      });
+    }
+
+    resp.send({ 
+      produto_id,
+      imagem_url,
+      mensagem: 'Imagem definida com sucesso!'
+    });
+
+  } catch (error) {
+    console.error('Erro:', error);
+    resp.status(500).send({ 
+      erro: 'Erro ao definir imagem' 
+    });
+  }
+});
+
 export default endpoints;
 
