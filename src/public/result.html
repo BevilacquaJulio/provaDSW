@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Produtos</title>
+    <style>body{font-family:Arial,Helvetica,sans-serif} .card{border:1px solid #ddd;padding:12px;margin:8px;border-radius:6px;display:flex;gap:12px;align-items:center} img{width:120px;height:120px;object-fit:cover;border-radius:6px}</style>
+  </head>
+  <body>
+    <h1>Produtos</h1>
+    <div id="list"></div>
+    <script>
+      async function load(){
+        try{
+          const res = await fetch('/listar-produtos');
+          const data = await res.json();
+          const list = document.getElementById('list');
+          (data.produtos||[]).forEach(p=>{
+            const div = document.createElement('div');
+            div.className='card';
+            const img = document.createElement('img');
+            img.src = p.imagem_url || '/storage/sample-image.svg';
+            const info = document.createElement('div');
+            info.innerHTML = `<strong>${p.nome}</strong><div>${p.descricao||''}</div><div>R$ ${p.preco}</div>`;
+            div.appendChild(img);
+            div.appendChild(info);
+            list.appendChild(div);
+          })
+        }catch(e){console.error(e)}
+      }
+      load();
+    </script>
+  </body>
+</html>
