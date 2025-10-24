@@ -127,18 +127,15 @@ endpoints.put('/responder-proposta/:id', autenticador, async (req, resp) => {
       });
     }
 
-    if (proposta.status !== 'pendente') {
-      return resp.status(400).send({ 
-        erro: 'Esta proposta já foi respondida' 
-      });
-    }
-
     const ehVendedor = await repo.verificarProprietarioVendedor(proposta_id, usuarioId);
     if (!ehVendedor) {
       return resp.status(403).send({ 
         erro: 'Apenas o dono do produto pode responder propostas' 
       });
     }
+
+    // Guardar status anterior para gerenciar o produto
+    const statusAnterior = proposta.status;
 
     const linhasAfetadas = await repo.responderProposta(proposta_id, status);
 
@@ -148,14 +145,29 @@ endpoints.put('/responder-proposta/:id', autenticador, async (req, resp) => {
       });
     }
 
-    if (status === 'aceita') {
+    // Gerenciar o status do produto baseado na mudança
+    if (status === 'aceita' && statusAnterior !== 'aceita') {
+      // Se aceitar (e antes não estava aceita), desativa o produto
       await produtoRepo.alterarStatusProduto(proposta.produto_id, false);
+    } else if (status === 'recusada' && statusAnterior === 'aceita') {
+      // Se recusar depois de ter aceito, reativa o produto
+      await produtoRepo.alterarStatusProduto(proposta.produto_id, true);
+    }
+
+    let mensagem = '';
+    if (statusAnterior === status) {
+      mensagem = `Proposta mantida como ${status}`;
+    } else if (statusAnterior === 'pendente') {
+      mensagem = status === 'aceita' ? 'Proposta aceita com sucesso!' : 'Proposta recusada';
+    } else {
+      mensagem = `Proposta alterada de ${statusAnterior} para ${status}`;
     }
 
     resp.send({ 
       proposta_id,
-      status,
-      mensagem: status === 'aceita' ? 'Proposta aceita com sucesso!' : 'Proposta recusada'
+      status_anterior: statusAnterior,
+      status_novo: status,
+      mensagem
     });
 
   } catch (error) {

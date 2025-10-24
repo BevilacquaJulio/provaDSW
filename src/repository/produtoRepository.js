@@ -107,10 +107,17 @@ export async function alterarStatusProduto(produto_id, ativo) {
 }
 
 export async function deletarProduto(produto_id) {
-  const comando = `
+  // Primeiro, deleta todas as propostas vinculadas ao produto
+  const comandoProposta = `
+    DELETE FROM proposta WHERE produto_id = ?
+  `
+  await connection.query(comandoProposta, [produto_id]);
+  
+  // Depois, deleta o produto
+  const comandoProduto = `
     DELETE FROM produto WHERE produto_id = ?
   `
-  const [registro] = await connection.query(comando, [produto_id])
+  const [registro] = await connection.query(comandoProduto, [produto_id])
   return registro.affectedRows;
 }
 
