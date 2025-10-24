@@ -2,14 +2,15 @@ import { connection } from './connection.js'
 
 export async function inserirProduto(produto) {
   const comando = `
-    INSERT INTO produto (usuario_id, nome, descricao, preco)
-    VALUES (?, ?, ?, ?);
+    INSERT INTO produto (usuario_id, nome, descricao, preco, ativo)
+    VALUES (?, ?, ?, ?, ?);
   `;
   const [info] = await connection.query(comando, [
     produto.usuario_id,
     produto.nome,
     produto.descricao,
     produto.preco,
+    produto.ativo,
   ]);
   return info.insertId;
 }
@@ -80,6 +81,7 @@ export async function alterarProduto(produto_id, produto) {
     SET nome = ?, 
         descricao = ?,
         preco = ?,
+        ativo = ?,
         imagem_url = ?
     WHERE produto_id = ?;
   `
@@ -87,6 +89,7 @@ export async function alterarProduto(produto_id, produto) {
     produto.nome,
     produto.descricao,
     produto.preco,
+    produto.ativo,
     produto.imagem_url,
     produto_id
   ])
@@ -104,10 +107,17 @@ export async function alterarStatusProduto(produto_id, ativo) {
 }
 
 export async function deletarProduto(produto_id) {
-  const comando = `
+  // Primeiro, deleta todas as propostas vinculadas ao produto
+  const comandoProposta = `
+    DELETE FROM proposta WHERE produto_id = ?
+  `
+  await connection.query(comandoProposta, [produto_id]);
+  
+  // Depois, deleta o produto
+  const comandoProduto = `
     DELETE FROM produto WHERE produto_id = ?
   `
-  const [registro] = await connection.query(comando, [produto_id])
+  const [registro] = await connection.query(comandoProduto, [produto_id])
   return registro.affectedRows;
 }
 
