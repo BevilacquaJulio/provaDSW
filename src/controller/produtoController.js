@@ -38,7 +38,23 @@ endpoints.post('/inserir-produto', autenticador, async (req, resp) => {
 
 endpoints.get('/listar-produtos', async (req, resp) => {
   try {
-    let produtos = await repo.listarProdutosAtivos();
+    // Filtros via query string: nome, minPreco, maxPreco
+    const nome = req.query.nome;
+    const minPreco = req.query.minPreco ? Number(req.query.minPreco) : undefined;
+    const maxPreco = req.query.maxPreco ? Number(req.query.maxPreco) : undefined;
+
+    // tenta extrair usuário do token (se houver) para excluir seus próprios produtos
+    let excluirUsuarioId = undefined;
+    try {
+      const jwtUtils = await import('../utils/jwt.js');
+      const info = jwtUtils.getTokenInfo(req);
+      if (info && info.usuario_id) excluirUsuarioId = info.usuario_id;
+    } catch (e) {
+      // não é crítico
+    }
+
+    const filtros = { nome, minPreco, maxPreco, excluirUsuarioId };
+    let produtos = await repo.listarProdutosAtivos(filtros);
 
     resp.send({ produtos });
 

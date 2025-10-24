@@ -15,8 +15,8 @@ export async function inserirProduto(produto) {
   return info.insertId;
 }
 
-export async function listarProdutosAtivos() {
-  const comando = `
+export async function listarProdutosAtivos(filters = {}) {
+  let comando = `
     SELECT 
       p.produto_id,
       p.nome,
@@ -25,13 +25,38 @@ export async function listarProdutosAtivos() {
       p.imagem_url,
       p.data_inclusao,
       u.nome AS vendedor_nome,
-      u.telefone AS vendedor_telefone
+      u.telefone AS vendedor_telefone,
+      p.usuario_id AS vendedor_id
     FROM produto p
     JOIN usuario u ON p.usuario_id = u.usuario_id
     WHERE p.ativo = TRUE
-    ORDER BY p.data_inclusao DESC;
   `;
-  const [registros] = await connection.query(comando);
+
+  const params = [];
+
+  if (filters.nome) {
+    comando += ` AND p.nome LIKE ?`;
+    params.push('%' + filters.nome + '%');
+  }
+
+  if (filters.minPreco !== undefined) {
+    comando += ` AND p.preco >= ?`;
+    params.push(filters.minPreco);
+  }
+
+  if (filters.maxPreco !== undefined) {
+    comando += ` AND p.preco <= ?`;
+    params.push(filters.maxPreco);
+  }
+
+  if (filters.excluirUsuarioId) {
+    comando += ` AND p.usuario_id != ?`;
+    params.push(filters.excluirUsuarioId);
+  }
+
+  comando += ` ORDER BY p.data_inclusao DESC;`;
+
+  const [registros] = await connection.query(comando, params);
   return registros;
 }
 

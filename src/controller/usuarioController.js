@@ -8,9 +8,12 @@ endpoints.post('/usuario', async (req, resp) => {
   try {
     let novoLogin = req.body;
     
-    let id = await repo.criarConta(novoLogin);
-    
-    resp.send({ novoId: id });
+    let result = await repo.criarConta(novoLogin);
+    if (result && result.duplicate) {
+      return resp.status(409).send({ erro: 'Email já cadastrado' });
+    }
+
+    resp.send({ novoId: result.insertId });
   } catch (error) {
     console.error('Erro:', error);
     resp.status(500).send({ erro: 'Erro interno do servidor' });
