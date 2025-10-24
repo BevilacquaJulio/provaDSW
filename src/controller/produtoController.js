@@ -22,6 +22,18 @@ endpoints.post('/inserir-produto', autenticador, async (req, resp) => {
       });
     }
 
+    // Se ativo não for informado, assume TRUE como padrão
+    if (produto.ativo === undefined || produto.ativo === null) {
+      produto.ativo = true;
+    }
+
+    // Validar se ativo é um valor booleano
+    if (typeof produto.ativo !== 'boolean') {
+      return resp.status(400).send({ 
+        erro: 'O campo ativo deve ser true ou false' 
+      });
+    }
+
     produto.usuario_id = usuarioId;
 
     let id = await repo.inserirProduto(produto);
@@ -102,6 +114,15 @@ endpoints.put('/alterar-produto/:id', autenticador, async (req, resp) => {
       return resp.status(400).send({ 
         erro: 'Preço deve ser maior que zero' 
       });
+    }
+
+    // Validar campo ativo se foi informado
+    if (produto.ativo !== undefined && produto.ativo !== null) {
+      if (typeof produto.ativo !== 'boolean') {
+        return resp.status(400).send({ 
+          erro: 'O campo ativo deve ser true ou false' 
+        });
+      }
     }
 
     const pertence = await repo.verificarProprietarioProduto(id, usuarioId);

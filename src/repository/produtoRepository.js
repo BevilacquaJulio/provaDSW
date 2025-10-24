@@ -2,14 +2,15 @@ import { connection } from './connection.js'
 
 export async function inserirProduto(produto) {
   const comando = `
-    INSERT INTO produto (usuario_id, nome, descricao, preco)
-    VALUES (?, ?, ?, ?);
+    INSERT INTO produto (usuario_id, nome, descricao, preco, ativo)
+    VALUES (?, ?, ?, ?, ?);
   `;
   const [info] = await connection.query(comando, [
     produto.usuario_id,
     produto.nome,
     produto.descricao,
     produto.preco,
+    produto.ativo,
   ]);
   return info.insertId;
 }
@@ -80,6 +81,7 @@ export async function alterarProduto(produto_id, produto) {
     SET nome = ?, 
         descricao = ?,
         preco = ?,
+        ativo = ?,
         imagem_url = ?
     WHERE produto_id = ?;
   `
@@ -87,6 +89,7 @@ export async function alterarProduto(produto_id, produto) {
     produto.nome,
     produto.descricao,
     produto.preco,
+    produto.ativo,
     produto.imagem_url,
     produto_id
   ])
