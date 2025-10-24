@@ -12,7 +12,6 @@ const api = express();
 api.use(cors())
 api.use(express.json())
 
-// Servir arquivos estáticos da pasta public
 api.use('/public', express.static(path.join(__dirname, '../public')));
 
 adicionarRotas(api);

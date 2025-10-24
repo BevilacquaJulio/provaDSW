@@ -134,7 +134,6 @@ endpoints.put('/responder-proposta/:id', autenticador, async (req, resp) => {
       });
     }
 
-    // Guardar status anterior para gerenciar o produto
     const statusAnterior = proposta.status;
 
     const linhasAfetadas = await repo.responderProposta(proposta_id, status);
@@ -145,12 +144,9 @@ endpoints.put('/responder-proposta/:id', autenticador, async (req, resp) => {
       });
     }
 
-    // Gerenciar o status do produto baseado na mudança
     if (status === 'aceita' && statusAnterior !== 'aceita') {
-      // Se aceitar (e antes não estava aceita), desativa o produto
       await produtoRepo.alterarStatusProduto(proposta.produto_id, false);
     } else if (status === 'recusada' && statusAnterior === 'aceita') {
-      // Se recusar depois de ter aceito, reativa o produto
       await produtoRepo.alterarStatusProduto(proposta.produto_id, true);
     }
 

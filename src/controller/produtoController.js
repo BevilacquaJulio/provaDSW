@@ -22,12 +22,10 @@ endpoints.post('/inserir-produto', autenticador, async (req, resp) => {
       });
     }
 
-    // Se ativo não for informado, assume TRUE como padrão
     if (produto.ativo === undefined || produto.ativo === null) {
       produto.ativo = true;
     }
 
-    // Validar se ativo é um valor booleano
     if (typeof produto.ativo !== 'boolean') {
       return resp.status(400).send({ 
         erro: 'O campo ativo deve ser true ou false' 
@@ -116,7 +114,6 @@ endpoints.put('/alterar-produto/:id', autenticador, async (req, resp) => {
       });
     }
 
-    // Validar campo ativo se foi informado
     if (produto.ativo !== undefined && produto.ativo !== null) {
       if (typeof produto.ativo !== 'boolean') {
         return resp.status(400).send({ 
@@ -192,7 +189,6 @@ endpoints.put('/definir-imagem/:id', autenticador, async (req, resp) => {
       });
     }
 
-    // Verificar se o produto pertence ao usuário
     const pertence = await repo.verificarProprietarioProduto(produto_id, usuarioId);
     if (!pertence) {
       return resp.status(403).send({ 
@@ -200,7 +196,6 @@ endpoints.put('/definir-imagem/:id', autenticador, async (req, resp) => {
       });
     }
 
-    // Atualizar a imagem no banco
     const linhasAfetadas = await repo.atualizarImagemProduto(produto_id, imagem_url);
 
     if (linhasAfetadas === 0) {
