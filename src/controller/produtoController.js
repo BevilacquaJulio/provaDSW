@@ -1,9 +1,52 @@
 import { Router } from "express";
 import { getAuthentication } from '../utils/jwt.js';
 import * as repo from "../repository/produtoRepository.js";
+import multer from 'multer';
+import path from 'path';
+
+// Configuração do multer para salvar em src/public/storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, process.cwd() + '/src/public/storage');
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const name = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + ext;
+    cb(null, name);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|gif/;
+    const mimetypeOK = allowed.test(file.mimetype);
+    const extOK = allowed.test(path.extname(file.originalname).toLowerCase());
+    if (mimetypeOK && extOK) cb(null, true);
+    else cb(new Error('Tipo de arquivo inválido. Aceito: jpeg, jpg, png, gif'));
+  }
+});
 
 const endpoints = Router();
 const autenticador = getAuthentication();
+
+// Endpoint para upload de imagem (autenticado)
+endpoints.post('/upload-imagem', autenticador, upload.single('imagem'), async (req, resp) => {
+  try {
+    if (!req.file) {
+      return resp.status(400).send({ erro: 'Arquivo não enviado' });
+    }
+
+    // A rota está servindo src/public como estático, então retornamos o caminho relativo
+    const imagem_url = `/storage/${req.file.filename}`;
+    resp.send({ imagem_url });
+  }
+  catch (error) {
+    console.error('Erro upload imagem:', error);
+    resp.status(500).send({ erro: 'Erro ao enviar imagem' });
+  }
+});
 
 endpoints.post('/inserir-produto', autenticador, async (req, resp) => {
   try {
