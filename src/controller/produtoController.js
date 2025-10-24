@@ -32,18 +32,26 @@ const endpoints = Router();
 const autenticador = getAuthentication();
 
 // Endpoint para upload de imagem (autenticado)
-endpoints.post('/upload-imagem', autenticador, upload.single('imagem'), async (req, resp) => {
+endpoints.post('/upload-imagem', autenticador, upload.any(), async (req, resp) => {
   try {
-    if (!req.file) {
+    // multer with upload.any() places files in req.files (array)
+    const files = req.files || [];
+    if (files.length === 0) {
       return resp.status(400).send({ erro: 'Arquivo não enviado' });
     }
 
-    // A rota está servindo src/public como estático, então retornamos o caminho relativo
-    const imagem_url = `/storage/${req.file.filename}`;
+    // pick the first file (Postman: use key 'imagem' or any other key)
+    const file = files[0];
+    if (!file || !file.filename) {
+      return resp.status(400).send({ erro: 'Arquivo inválido' });
+    }
+
+    const imagem_url = `/storage/${file.filename}`;
     resp.send({ imagem_url });
   }
   catch (error) {
     console.error('Erro upload imagem:', error);
+    // multer errors are handled by the app error handler; here fallback
     resp.status(500).send({ erro: 'Erro ao enviar imagem' });
   }
 });

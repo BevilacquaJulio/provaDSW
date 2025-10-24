@@ -1,5 +1,6 @@
 import { connection } from "./connection.js";
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 export async function criarConta(novoLogin) {
   // Verifica se email já existe
@@ -39,7 +40,26 @@ export async function validarCredenciais(email, senha) {
   const usuario = registros[0];
   if (!usuario) return null;
 
-  const match = await bcrypt.compare(senha, usuario.senha);
+  // Primeiro tenta bcrypt (novo formato)
+  let match = false;
+  try {
+    match = await bcrypt.compare(senha, usuario.senha);
+  } catch (e) {
+    match = false;
+  }
+
+  // Se bcrypt falhar, tenta comparar MD5 antigo e, se bater, migra para bcrypt
+  if (!match) {
+    const md5 = crypto.createHash('md5').update(senha).digest('hex');
+    if (md5 === usuario.senha) {
+      // migra para bcrypt
+      const newHash = await bcrypt.hash(senha, 10);
+      const upd = `UPDATE usuario SET senha = ? WHERE usuario_id = ?`;
+      await connection.query(upd, [newHash, usuario.usuario_id]);
+      match = true;
+    }
+  }
+
   if (!match) return null;
 
   // Não retorna a senha para o controller
